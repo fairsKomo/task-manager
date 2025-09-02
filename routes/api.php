@@ -12,5 +12,11 @@ Route::get('/user', function (Request $request) {
 
 
 Route::apiResource('users', UserController::class);
-Route::apiResource('tasks', TaskController::class);
+Route::get('users/{id}/projects', [UserController::class, 'ShowWithProjects']);
+
 Route::apiResource('projects', ProjectController::class);
+
+Route::apiResource('tasks', TaskController::class);
+Route::get('tasks/{id}/status', [TaskController::class, 'ShowWithStatus']);
+
+Route::get('projects/{id}/tasks', [ProjectController::class, 'ShowWithTasks']);

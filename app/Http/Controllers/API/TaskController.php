@@ -10,6 +10,8 @@ use App\Models\Task;
 use App\Http\Resources\TaskResource;
 use App\Http\Resources\TaskCollection;
 use App\Filters\TaskFilter;
+use App\Models\Status;
+
 class TaskController extends Controller
 {
     /**
@@ -48,8 +50,10 @@ class TaskController extends Controller
      */
     public function show(string $id)
     {
-        return new TaskResource(Task::findOrFail($id));
+        $task = Task::with('Status')->find($id);
+        return new TaskResource($task);
     }
+
 
     /**
      * Update the specified resource in storage.

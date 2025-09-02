@@ -53,6 +53,18 @@ class UserController extends Controller
         return new UserResource(User::findOrFail($id));
     }
 
+    public function showWithProjects(string $id){
+        $user = User::with('projects')->find($id);
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        return response()->json($user, 200);
+    }
+
     /**
      * Update the specified resource in storage.
      */

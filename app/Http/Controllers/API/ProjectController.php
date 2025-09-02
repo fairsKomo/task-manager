@@ -53,6 +53,18 @@ class ProjectController extends Controller
 
     }
 
+    public function showWithTasks(string $id){
+        $project = Project::with('tasks')->find($id);
+
+        if (!$project) {
+            return response()->json([
+                'message' => 'Project not found'
+            ], 404);
+        }
+
+        return response()->json($project, 200);
+    }
+
     /**
      * Update the specified resource in storage.
      */

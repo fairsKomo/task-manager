@@ -33,8 +33,14 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request)
     {
-        $task = Task::create($request->validated());
-        return response()->json($task, 201);
+        $validated = $request->validated();
+
+        $task = Task::create($validated);
+
+        return response()->json(
+    ['message' => 'Task created successfully',
+            'data' => $task
+            ], 201);
     }
 
     /**
@@ -48,9 +54,11 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateTaskRequest $request, Task $task)
     {
-        //
+        $validated = $request->validated();
+        $task->update($validated);
+        return response()->json($task, 201);
     }
 
     /**

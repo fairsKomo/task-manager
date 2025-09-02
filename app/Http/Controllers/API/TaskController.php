@@ -48,7 +48,7 @@ class TaskController extends Controller
      */
     public function show(string $id)
     {
-        //
+        return new TaskResource(Task::findOrFail($id));
     }
 
     /**

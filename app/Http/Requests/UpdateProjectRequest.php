@@ -11,7 +11,7 @@ class UpdateProjectRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,8 +22,8 @@ class UpdateProjectRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'sometimes|nullable|string',
             'user_id' => 'sometimes|required|integer|exists:users,id',
         ];
     }

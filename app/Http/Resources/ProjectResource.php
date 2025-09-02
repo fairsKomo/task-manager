@@ -15,8 +15,8 @@ class ProjectResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-                    'title' => $this->name,
-                    'description' => $this->email,
+                    'title' => $this->title,
+                    'description' => $this->description,
         ];    
     }
 }

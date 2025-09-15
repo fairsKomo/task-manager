@@ -10,9 +10,14 @@ use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\ProjectCollection;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 
 class ProjectController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
@@ -21,12 +26,13 @@ class ProjectController extends Controller
         $filter = new ProjectFilter();
         $queryItems = $filter->transform($request);
 
-        if(count($queryItems) == 0){
-            return new ProjectCollection(Project::paginate(4));
-        } else {
+        $query = Project::where('user_id', Auth::id());
 
-            return new ProjectCollection(Project::where($queryItems)->paginate(4));
+        if(count($queryItems) > 0){
+            $query->where($queryItems);
         }
+
+        return new ProjectCollection($query->paginate(4));
     }
 
     /**
@@ -35,11 +41,12 @@ class ProjectController extends Controller
     public function store(StoreProjectRequest $request)
     {
         $validated = $request->validated();
-
+        $validated['user_id'] = Auth::id();
+        
         $task = Project::create($validated);
 
         return response()->json(
-    ['message' => 'Project created successfully',
+        ['message' => 'Project created successfully',
             'data' => $task
         ], 201);
     }
@@ -49,17 +56,35 @@ class ProjectController extends Controller
      */
     public function show(string $id)
     {
-        return new ProjectResource(Project::findOrFail($id));
+        $project = Project::findOrFail($id);
 
+        if (Gate::denies('view-project', $project)) {
+            return response()->json([
+                'message' => 'Access denied.'
+            ], 403);
+        }
+
+        if(!$project){
+            return response()->json(['message' => 'Project not found'], 404);
+        }
+
+
+        return new ProjectResource($project);
     }
 
     public function showWithTasks(string $id){
-        $project = Project::with('tasks')->find($id);
+        $project = Project::with('tasks')
+                  ->where('id', $id)
+                  ->first();
 
-        if (!$project) {
+        if (Gate::denies('view-project', $project)) {
             return response()->json([
-                'message' => 'Project not found'
-            ], 404);
+                'message' => 'Access denied.'
+            ], 403);
+        }
+        
+        if(!$project){
+            return response()->json(['message' => 'Project not found'], 404);
         }
 
         return response()->json($project, 200);
@@ -68,18 +93,22 @@ class ProjectController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateProjectRequest $request, Project $project)
+    public function update(UpdateProjectRequest $request, string $id)
     {
+        $project = Project::findOrFail($id);
+
+        if (! Gate::allows('update-project', $project)) {
+            return response()->json([
+                'message' => 'Project not found or access denied'
+            ], 403);
+        }
+
         $validated = $request->validated();
         $project->update($validated);
-        return response()->json($project, 201);
-    }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->json([
+            'message' => 'Project updated successfully',
+            'data' => $project,
+        ], 200);
     }
 }

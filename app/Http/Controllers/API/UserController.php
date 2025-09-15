@@ -11,6 +11,7 @@ use App\Filters\UserFilter;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -35,7 +36,6 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request)
     {
-        Log::info('Heel from User Store:');
         $validated = $request->validated();
         $user = User::create($validated);
 
@@ -50,16 +50,34 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        return new UserResource(User::findOrFail($id));
+        // Fetch the user
+        $user = User::findOrFail($id);
+
+        // Authorization: check if this is the authenticated user
+        if ($user->id !== Auth::id()) {
+            return response()->json([
+                'message' => 'Access denied. You can only view your own profile.'
+            ], 403);
+        }
+
+        return new UserResource($user);
     }
 
-    public function showWithProjects(string $id){
+    public function showWithProjects(string $id)
+    {
         $user = User::with('projects')->find($id);
 
         if (!$user) {
             return response()->json([
                 'message' => 'User not found'
             ], 404);
+        }
+
+        // Authorization: check if the authenticated user matches the requested user
+        if ($user->id !== Auth::id()) {
+            return response()->json([
+                'message' => 'Access denied. You can only view your own projects.'
+            ], 403);
         }
 
         return response()->json($user, 200);
